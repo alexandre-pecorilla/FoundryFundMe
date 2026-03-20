@@ -117,7 +117,7 @@ contract FundMe {
 
         // this is cheaper in gas than the above because we don't have to pull "Must be owner" into memory everytime the function is called
         if (msg.sender != i_owner) {
-            revert NotOwner();
+            revert FundMe__NotOwner();
         }
 
         // the below must be at the end of the modifier if we want the modifier to execute FIRST before a function code is executed
