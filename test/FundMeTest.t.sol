@@ -22,4 +22,16 @@ contract FundMeTest is Test {
     function testMinimumDollarIsFive() public view {
         assertEq(fundMe.MINIMUM_USD(), 5e18);
     }
+
+    function testOwnerIsMsgSender() public view {
+        console.log(fundMe.i_owner());
+        console.log(msg.sender);
+
+        // This doesnt work because it's us calling FundMeTest, but then its FundMeTest that deploys FundMe and calls its functions
+        // so msg.sender for FundMeTest is our address, but msg.sender for FundMe is the address of FundMeTest
+        //assertEq(fundMe.i_owner(), msg.sender);
+
+        // Therefore this works because we check if the owner of FundMe is the address of FundMeTest
+        assertEq(fundMe.i_owner(), address(this));
+    }
 }
