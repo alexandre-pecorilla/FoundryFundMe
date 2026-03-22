@@ -34,4 +34,10 @@ contract FundMeTest is Test {
         // Therefore this works because we check if the owner of FundMe is the address of FundMeTest
         assertEq(fundMe.i_owner(), address(this));
     }
+
+    function testPriceFeedVersionIsAccurate() public view {
+        uint256 priceFeedVersion = fundMe.getVersion();
+        console.log((priceFeedVersion));
+        assertEq(priceFeedVersion, 4);
+    }
 }

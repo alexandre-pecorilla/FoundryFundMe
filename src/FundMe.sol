@@ -3,6 +3,7 @@
 pragma solidity ^0.8.18;
 
 import {PriceConverter} from "./PriceConverter.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 // creating a custom error to save gas
 error FundMe__NotOwner();
@@ -124,6 +125,13 @@ contract FundMe {
         // if we put it at the beginning of the modifier (before the require) the modifier executes LAST after a function codei is executed
         // this _; basically means "do whatever that is in the function that is modified (decorated)
         _;
+    }
+
+    function getVersion() public view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
+        );
+        return priceFeed.version();
     }
 
     // What happens if someone sends eth to this contract without calling the fund function, directly with the contract address instead
