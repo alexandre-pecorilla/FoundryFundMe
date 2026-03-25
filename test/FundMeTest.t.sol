@@ -7,6 +7,7 @@ pragma solidity ^0.8.18;
 import {Test, console} from "forge-std/Test.sol";
 
 import {FundMe} from "../src/FundMe.sol";
+import {DeployFundMe} from "../script/DeployFundMe.s.sol";
 
 // Our Test contract Inherits from the Test contract of the forge standard lib
 contract FundMeTest is Test {
@@ -16,7 +17,9 @@ contract FundMeTest is Test {
     // Later we learn how to deploy from the script, so that our testing and deploy environment are the same
     // its the first function executed when testing
     function setUp() external {
-        fundMe = new FundMe();
+        //fundMe = new FundMe(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+        DeployFundMe deployFundMe = new DeployFundMe();
+        fundMe = deployFundMe.run();
     }
 
     function testMinimumDollarIsFive() public view {
@@ -32,7 +35,7 @@ contract FundMeTest is Test {
         //assertEq(fundMe.i_owner(), msg.sender);
 
         // Therefore this works because we check if the owner of FundMe is the address of FundMeTest
-        assertEq(fundMe.i_owner(), address(this));
+        assertEq(fundMe.i_owner(), msg.sender);
     }
 
     function testPriceFeedVersionIsAccurate() public view {

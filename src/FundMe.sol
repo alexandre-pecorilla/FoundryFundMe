@@ -39,11 +39,13 @@ contract FundMe {
     // they lower gas costs when deploying and interacting with the contract
     // the convention for immutable variables names is to start with i_
     address public immutable i_owner;
+    AggregatorV3Interface private immutable i_priceFeed;
 
     // function immediately called when we deploy the contract
     // its called in the same transaction that deploys the contract
-    constructor() {
+    constructor(address priceFeed) {
         i_owner = msg.sender; // set the owner address to our address (since we are the ones deploying the contract, msg.sender will be our address)
+        i_priceFeed = AggregatorV3Interface(priceFeed);
     }
 
     // payable function
@@ -54,7 +56,7 @@ contract FundMe {
         // Therefore we will need to call an oracle to get the spot price of ethereum in ETH
         // That way we can require a minimum amount of ETH that matches minimumUSD
         require(
-            msg.value.getConversionRate() >= MINIMUM_USD,
+            msg.value.getConversionRate(i_priceFeed) >= MINIMUM_USD,
             "You must sent at least $5."
         ); // This is allowd because we did using PriceConverter for uint256;
         funders.push(msg.sender); // store the address of the sender to the array
@@ -128,10 +130,7 @@ contract FundMe {
     }
 
     function getVersion() public view returns (uint256) {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(
-            0x694AA1769357215DE4FAC081bf1f309aDC325306
-        );
-        return priceFeed.version();
+        return i_priceFeed.version();
     }
 
     // What happens if someone sends eth to this contract without calling the fund function, directly with the contract address instead
