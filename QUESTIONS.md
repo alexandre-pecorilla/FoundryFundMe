@@ -53,3 +53,38 @@
 **Q:** After deploying on Anvil, the output showed two transactions. The mock Chainlink price feed was block 1 at `0x5FbDB2315678afecb367f032d93F642f64180aa3`, and `FundMe` was block 2 at `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512`. Correct?
 
 **A:** Yes, exactly. This confirms the two-transaction behavior discussed in question 6. The mock deploys first (block 1), then `FundMe` (block 2). The return value shown at the top of the output matches the `FundMe` address, which is what the `run()` function returns.
+
+---
+
+## 8. What does the `address(0)` check do in `getAnvilEthConfig()`?
+
+**Q:** Explain `if (activeNetworkConfig.priceFeed != address(0)) { return activeNetworkConfig; }` in `getAnvilEthConfig`.
+
+**A:** It's a guard to avoid deploying the mock more than once. `address(0)` (`0x000...000`) is the default value for an address in Solidity. On the first call, `priceFeed` is still `address(0)`, so the check fails and the mock gets deployed. On any subsequent call, `priceFeed` is already set to a real address, so the check passes and it returns the existing config without deploying another mock.
+
+---
+
+## 9. How does `priceFeed` stay set if it's not on-chain?
+
+**Q:** We said only what's between `vm.startBroadcast/stopBroadcast` gets sent to the chain. So how does `priceFeed` remain set with a value?
+
+**A:** Everything in a Foundry script runs in the local EVM. `startBroadcast/stopBroadcast` doesn't change where code executes — it just **flags** certain operations to also be replicated on-chain. So after a run, on-chain you only have the mock and FundMe deployments, but locally everything existed (including `HelperConfig` and its state).
+
+The key insight: on-chain state persists across script runs, but Foundry's local EVM is ephemeral — it starts fresh every time. So on a second run, `priceFeed` is back to `address(0)` and a new mock gets deployed.
+
+The `address(0)` guard only protects within a **single script execution** — if `getAnvilEthConfig()` is called multiple times in the same run, it ensures the mock is deployed only once so all callers get the same price feed address.
+
+---
+
+## 10. Why does `testOwnerIsMsgSender` pass?
+
+**Q:** Why is `testOwnerIsMsgSender` passing when asserting `fundMe.i_owner() == msg.sender`?
+
+**A:** Because `setUp()` uses `DeployFundMe.run()`, which deploys `FundMe` inside `vm.startBroadcast()`. `startBroadcast` makes transactions appear as if they come from the original caller, not from the `DeployFundMe` contract.
+
+When running `forge test`, you don't specify an address — Foundry assigns a **default hardcoded address** as the caller automatically. So:
+- `msg.sender` inside `FundMeTest` is that default Foundry address
+- `vm.startBroadcast()` makes the `FundMe` deployment come from that same default address
+- So `i_owner` and `msg.sender` match
+
+Without the deploy script (using `new FundMe(...)` directly in setUp), the owner would have been `address(FundMeTest)` instead, and the assertion against `msg.sender` would fail.

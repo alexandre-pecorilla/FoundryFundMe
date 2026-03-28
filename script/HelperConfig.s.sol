@@ -24,7 +24,7 @@ contract HelperConfig is Script {
             // check if the current chain is sepolia
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
-            activeNetworkConfig = getAnvilEthConfig();
+            activeNetworkConfig = getOrCreateAnvilEthConfig();
         }
     }
 
@@ -37,10 +37,14 @@ contract HelperConfig is Script {
     }
 
     // get the mock Price Feed contract address on Anvil
-    function getAnvilEthConfig() public returns (NetworkConfig memory) {
-        // Deploy the mock
-
-        // Return the mock address
+    function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
+        // address(0) is the default value for an unset address in Solidity.
+        // If a mock was already deployed during this script run,
+        // return the existing config to avoid deploying duplicates.
+        if (activeNetworkConfig.priceFeed != address(0)) {
+            return activeNetworkConfig;
+        }
+        // Deploy the mock contract and the mock address
         vm.startBroadcast();
         MockV3Aggregator mockPriceFeed = new MockV3Aggregator(
             DECIMALS,

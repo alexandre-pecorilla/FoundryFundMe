@@ -30,11 +30,11 @@ contract FundMeTest is Test {
         console.log(fundMe.i_owner());
         console.log(msg.sender);
 
-        // This doesnt work because it's us calling FundMeTest, but then its FundMeTest that deploys FundMe and calls its functions
-        // so msg.sender for FundMeTest is our address, but msg.sender for FundMe is the address of FundMeTest
-        //assertEq(fundMe.i_owner(), msg.sender);
-
-        // Therefore this works because we check if the owner of FundMe is the address of FundMeTest
+        // This works because DeployFundMe.run() uses vm.startBroadcast(), which makes
+        // the deployment appear as if it comes from msg.sender (us), not from the DeployFundMe contract.
+        // So FundMe's constructor sees msg.sender as our address, and i_owner matches msg.sender here.
+        // Note: without the deploy script (using new FundMe(...) directly), the owner would be
+        // address(FundMeTest) and this assertion would fail.
         assertEq(fundMe.i_owner(), msg.sender);
     }
 
