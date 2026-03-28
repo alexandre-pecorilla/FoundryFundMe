@@ -15,8 +15,12 @@ contract HelperConfig is Script {
 
     NetworkConfig public activeNetworkConfig;
 
+    uint8 public constant DECIMALS = 8;
+    int256 public constant INITIAL_PRICE = 2000;
+    uint256 public constant SEPOLIA_CHAIN_ID = 11155111;
+
     constructor() {
-        if (block.chainid == 11155111) {
+        if (block.chainid == SEPOLIA_CHAIN_ID) {
             // check if the current chain is sepolia
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
@@ -38,7 +42,10 @@ contract HelperConfig is Script {
 
         // Return the mock address
         vm.startBroadcast();
-        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(8, 2000e8);
+        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(
+            DECIMALS,
+            INITIAL_PRICE
+        );
         vm.stopBroadcast();
 
         NetworkConfig memory anvilConfig = NetworkConfig({

@@ -4,3 +4,4 @@
 - One of this project is "Foundry Fund Me" and that's the one I'm working on at the moment
 - I won't need you to code because the goal is for me to learn by doing
 - However I will need you to act as a teacher assistant and answer my questions
+- Always keep the QUESTIONS.md file updated with the questions I ask and the answers you give
