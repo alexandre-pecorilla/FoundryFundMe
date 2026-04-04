@@ -27,11 +27,11 @@ contract FundMe {
     // Because it's just a reservation, it defaults to an empty array (length 0).
     // We don't need the 'new' keyword or a size because we aren't physically
     // allocating a chunk of memory yet.
-    address[] public funders;
+    address[] private s_funders;
 
     // key is an address, value is how much this address funded the contract (since the last withdrawal)
     mapping(address funder => uint256 amountFunded)
-        public addresssToAmountFunded;
+        private s_addresssToAmountFunded;
 
     // immutables are variables similar to constants but their value is assigned only once at deployment, usually in the constructor
     // so they aren't assigned where they're declared (in the state outside any function) like constants, but their value is assigned only once
@@ -59,16 +59,20 @@ contract FundMe {
             msg.value.getConversionRate(i_priceFeed) >= MINIMUM_USD,
             "You must sent at least $5."
         ); // This is allowd because we did using PriceConverter for uint256;
-        funders.push(msg.sender); // store the address of the sender to the array
-        addresssToAmountFunded[msg.sender] += msg.value; // store the amount sent by the sender
+        s_funders.push(msg.sender); // store the address of the sender to the array
+        s_addresssToAmountFunded[msg.sender] += msg.value; // store the amount sent by the sender
     }
 
     // withdraw funds and reset the funders array and mapping addresssToAmountFunded
     function withdraw() public onlyOwner {
         // reset the mapping
-        for (uint256 funderIndex; funderIndex < funders.length; funderIndex++) {
-            address funder = funders[funderIndex];
-            addresssToAmountFunded[funder] = 0;
+        for (
+            uint256 funderIndex;
+            funderIndex < s_funders.length;
+            funderIndex++
+        ) {
+            address funder = s_funders[funderIndex];
+            s_addresssToAmountFunded[funder] = 0;
         }
 
         // reset the array
@@ -77,7 +81,7 @@ contract FundMe {
         // THE RULE: When using 'new' to build an array in memory, Solidity absolutely
         // requires us to tell it the exact starting size.
         // So, '(0)' explicitly means "make this brand new array exactly zero items long."
-        funders = new address[](0);
+        s_funders = new address[](0);
 
         // SENDING ETH FROM THE CONTRACT
         // 3 methods are possible: transfer, send and call
@@ -151,5 +155,19 @@ contract FundMe {
     // note that even if it has value (msg.value), as long as it has data (msg.data) it falls back here
     fallback() external payable {
         fund(); // we also call fund here because we are greedy, so even if there is unexpected data in msg.data, if there is value (msg.value) we take it!
+    }
+
+    /**
+     * view / pure functions
+     */
+
+    function getAddressToAmountFunded(
+        address fundingAddress
+    ) external view returns (uint256) {
+        return s_addresssToAmountFunded[fundingAddress];
+    }
+
+    function getFunder(uint256 index) external view returns (address) {
+        return s_funders[index];
     }
 }

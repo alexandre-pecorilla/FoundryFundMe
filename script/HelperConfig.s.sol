@@ -16,7 +16,7 @@ contract HelperConfig is Script {
     NetworkConfig public activeNetworkConfig;
 
     uint8 public constant DECIMALS = 8;
-    int256 public constant INITIAL_PRICE = 2000;
+    int256 public constant INITIAL_PRICE = 2000e18;
     uint256 public constant SEPOLIA_CHAIN_ID = 11155111;
 
     constructor() {

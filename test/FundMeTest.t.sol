@@ -13,6 +13,14 @@ import {DeployFundMe} from "../script/DeployFundMe.s.sol";
 contract FundMeTest is Test {
     FundMe fundMe;
 
+    /**
+     * makeAddr is a Foundry utility (from forge-std) that generates a deterministic Ethereum address from a string label.
+     * It's a clean way to create fake users for your tests without hardcoding random-looking addresses.
+     */
+    address USER = makeAddr("user");
+    uint256 constant SEND_VALUE = 0.1 ether;
+    uint256 constant STARTING_BALANCE = 10 ether;
+
     // Deploy the smart contract (need before we can test it)
     // Later we learn how to deploy from the script, so that our testing and deploy environment are the same
     // its the first function executed when testing
@@ -20,6 +28,7 @@ contract FundMeTest is Test {
         //fundMe = new FundMe(0x694AA1769357215DE4FAC081bf1f309aDC325306);
         DeployFundMe deployFundMe = new DeployFundMe();
         fundMe = deployFundMe.run();
+        vm.deal(USER, STARTING_BALANCE); // give some funds to the USER address
     }
 
     function testMinimumDollarIsFive() public view {
@@ -42,5 +51,17 @@ contract FundMeTest is Test {
         uint256 priceFeedVersion = fundMe.getVersion();
         console.log((priceFeedVersion));
         assertEq(priceFeedVersion, 4);
+    }
+
+    function testFundFailsWithoutEnoughETH() public {
+        vm.expectRevert(); // Expect the next call to revert. If that call does revert, the test passes; if it doesn't revert, the test fails.
+        fundMe.fund();
+    }
+
+    function testFundUpdatesFundedDataStructure() public {
+        vm.prank(USER); // With this, the next transaction will be sent by USER instead of msg.sender
+        fundMe.fund{value: SEND_VALUE}();
+        uint256 amountFunded = fundMe.getAddressToAmountFunded(USER);
+        assertEq(amountFunded, SEND_VALUE);
     }
 }
