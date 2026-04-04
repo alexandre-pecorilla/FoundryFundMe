@@ -38,7 +38,7 @@ contract FundMe {
     // just like constants, their values can't change and they don't take storage space either because like constants the EVM hardcode the value in the contract bytecode
     // they lower gas costs when deploying and interacting with the contract
     // the convention for immutable variables names is to start with i_
-    address public immutable i_owner;
+    address private immutable i_owner;
     AggregatorV3Interface private immutable i_priceFeed;
 
     // function immediately called when we deploy the contract
@@ -169,5 +169,9 @@ contract FundMe {
 
     function getFunder(uint256 index) external view returns (address) {
         return s_funders[index];
+    }
+
+    function getOwner() external view returns (address) {
+        return i_owner;
     }
 }
