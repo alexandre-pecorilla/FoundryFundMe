@@ -20,6 +20,7 @@ contract FundMeTest is Test {
     address USER = makeAddr("user");
     uint256 constant SEND_VALUE = 0.1 ether;
     uint256 constant STARTING_BALANCE = 10 ether;
+    uint256 constant GAS_PRICE = 1;
 
     // Deploy the smart contract (need before we can test it)
     // Later we learn how to deploy from the script, so that our testing and deploy environment are the same
@@ -98,6 +99,27 @@ contract FundMeTest is Test {
 
         // Act (do the action you actually want to test)
 
+        // gasleft() is a Solidity built-in that returns how much gas is STILL AVAILABLE
+        // (i.e. REMAINING in the budget) for the current transaction to use — NOT how
+        // much has been used so far. Think of it as a fuel gauge reading.
+        //
+        // In forge tests, each test function runs as a single transaction with a very
+        // large default gas budget, so this value will be a big number.
+        //
+        // IMPORTANT: the absolute value of gasStart is meaningless on its own. What
+        // matters is the DELTA between gasStart (now) and gasEnd (after the action).
+        // That delta tells us how much gas the action we want to benchmark consumed.
+        uint256 gasStart = gasleft();
+
+        // By default in forge tests, tx.gasprice is 0, which means gas calculations
+        // based on tx.gasprice would return 0 and hide real cost differences.
+        // vm.txGasPrice sets tx.gasprice to a non-zero value so we can measure
+        // realistic gas costs when benchmarking with gasleft() * tx.gasprice.
+        // Scope: it applies to ALL subsequent transactions in this test, not just
+        // the next one. It persists until the test ends or until vm.txGasPrice is
+        // called again with a different value.
+        vm.txGasPrice(GAS_PRICE);
+
         // vm.prank is needed here because when FundMeTest calls fundMe.withdraw() directly,
         // FundMe sees msg.sender as address(FundMeTest), not as the owner.
         // The owner was set during deployment (DeployFundMe used vm.startBroadcast, which made
@@ -107,6 +129,42 @@ contract FundMeTest is Test {
         // So without vm.prank, withdraw() would revert with FundMe__NotOwner.
         vm.prank(fundMe.getOwner());
         fundMe.withdraw();
+
+        // Second fuel-gauge reading, taken RIGHT AFTER the action we wanted to measure.
+        // Like gasStart, this is the REMAINING gas in the budget, not the gas used.
+        //
+        // IMPORTANT — gas UNITS vs gas COST (two different things):
+        //
+        //   gasUsed = gasStart - gasEnd
+        //     → number of gas UNITS consumed (an abstract measure of computational work).
+        //       Every EVM op has a fixed gas-unit cost: e.g. ADD = 3 units, SSTORE = 20,000 units.
+        //       This tells us HOW MUCH WORK the action performed, but not how much money it costs.
+        //
+        //   gasCost = gasUsed * tx.gasprice
+        //     → actual cost in wei (real money).
+        //
+        // Think of it like a car:
+        //   - gas units = liters of fuel consumed
+        //   - tx.gasprice = price per liter (set by the transaction sender; varies with network
+        //     congestion on real chains — users bid higher to get included in a block faster)
+        //   - gasCost = liters * price per liter
+        //
+        // So two transactions with identical gasUsed can cost very different amounts of ETH
+        // depending on tx.gasprice at the time they were sent.
+        //
+        // This is why we set vm.txGasPrice(GAS_PRICE) above — forge defaults tx.gasprice to 0,
+        // so without that cheatcode the cost would always come out as 0 no matter how much
+        // work the action did.
+        uint256 gasEnd = gasleft();
+
+        uint256 gasUsed = gasStart - gasEnd;
+
+        // gasCost is the total cost of gas in wei
+        uint256 gasCost = gasUsed * tx.gasprice; // tx.gasprice is the cost in wei for 1 unit of gas
+        console.log("Gas Start: ", gasStart);
+        console.log("Gas Used: ", gasUsed);
+        console.log("Gas Cost: ", gasCost);
+        console.log("Gas End: ", gasEnd);
 
         // Assert (test)
         uint256 endingOwnerBalance = fundMe.getOwner().balance; // balance of the owner is now 0.1 ETH because of the withdrawn
