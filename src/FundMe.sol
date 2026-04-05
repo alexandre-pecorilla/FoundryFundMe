@@ -118,6 +118,23 @@ contract FundMe {
         require(callSuccess, "Call failed");
     }
 
+    // An optimized withdraw function that costs less gas
+    function cheaperWithdraw() public onlyOwner {
+        uint256 fundersLength = s_funders.length; // thats the optimization. Readiong storage (SLOAD) only once.
+
+        for (uint256 funderIndex; funderIndex < fundersLength; funderIndex++) {
+            address funder = s_funders[funderIndex];
+            s_addresssToAmountFunded[funder] = 0;
+        }
+
+        s_funders = new address[](0);
+
+        (bool callSuccess, ) = payable(msg.sender).call{
+            value: address(this).balance
+        }("");
+        require(callSuccess, "Call failed");
+    }
+
     // function modifier (decorator) to only allow the owner to access a function
     modifier onlyOwner() {
         //require(msg.sender == i_owner, "Must be owner");

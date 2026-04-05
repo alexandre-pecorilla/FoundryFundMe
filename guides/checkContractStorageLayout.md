@@ -1,3 +1,7 @@
+# Check a contract storage layout
+
+## Method 1
+
 To check the storage layout of FundMe, you can do:
 
 ```bash
@@ -60,4 +64,19 @@ Example output
 }
 ```
 
-As we can see we have only 2 variables in storage, `s_funders` and `s_addressToAmountFunded`.
+As we can see we have only 2 variables in storage, `s_funders` in slot 0 and `s_addressToAmountFunded` in slot 1.
+
+## Method 2
+
+First we deploy FundMe
+
+```bash
+forge script script/DeployFundMe.s.sol --rpc-url http://127.0.0.1:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast
+```
+
+Then we can check what data is in a certain storage slot. For example this returns what stored in slot 1.
+
+```bash
+cast storage 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1
+```
+
