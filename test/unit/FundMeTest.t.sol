@@ -6,8 +6,8 @@ pragma solidity ^0.8.18;
 // We also import console to print things on the terminal (useful for debugging)
 import {Test, console} from "forge-std/Test.sol";
 
-import {FundMe} from "../src/FundMe.sol";
-import {DeployFundMe} from "../script/DeployFundMe.s.sol";
+import {FundMe} from "../../src/FundMe.sol";
+import {DeployFundMe} from "../../script/DeployFundMe.s.sol";
 
 // Our Test contract Inherits from the Test contract of the forge standard lib
 contract FundMeTest is Test {

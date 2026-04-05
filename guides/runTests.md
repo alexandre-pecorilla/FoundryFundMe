@@ -48,7 +48,6 @@ The test will succeed and this is what happens in the background:
 2. Our test deploys FundMe locally on this chain
 3. getVersion() is called — FundMe calls the Chainlink aggregator at 0x694AA...
 4. Anvil's local EVM needs to execute the aggregator's code, but it doesn't have it
-Anvil makes free read-only API queries to our Sepolia node to fetch the raw bytecode and relevant storage slots at that address (this isn't Alchemy-specific — reads are free on any Ethereum node, no transaction is created, no gas is spent)
 5. Anvil makes free read-only API queries to our Sepolia node to fetch the raw bytecode and relevant storage slots at that address (this isn't Alchemy-specific — reads are free on any Ethereum node, no transaction is created, no gas is spent)
 6. Anvil caches that bytecode and storage into its local state — the Chainlink contract now effectively exists on the local chain
 7. Anvil's local EVM executes the version() function itself against that cached bytecode and storage — nothing is ever executed on Sepolia

@@ -4,4 +4,17 @@ out = "out"
 libs = ["lib"]
 remappings = ["@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts"]
 
+# foundry-devops (DevOpsTools.get_most_recent_deployment) reads deployment artifacts
+# from the ./broadcast directory (written by forge after `--broadcast` runs).
+# Foundry blocks filesystem access by default for safety, so we must explicitly grant
+# read access to that folder. Without this, vm.readDir/vm.readFile would revert.
+fs_permissions = [{ access = "read", path = "./broadcast" }]
+
+# NOTE: older versions of foundry-devops required `ffi = true` because the library
+# shelled out to a bash script via the Foreign Function Interface to find the latest
+# deployment. The library has since been rewritten in pure Solidity using vm.readDir
+# and vm.readFile, so ffi = true is NO LONGER NEEDED. Don't enable ffi unless you
+# actually need to run external shell commands — it's a significant security/trust
+# surface because it lets contracts execute arbitrary code on your machine.
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
