@@ -1,3 +1,6 @@
+# The full Makefile for the course is here => https://raw.githubusercontent.com/Cyfrin/foundry-fund-me-cu/refs/heads/main/Makefile
+
+
 -include .env
 
 build:; forge build
